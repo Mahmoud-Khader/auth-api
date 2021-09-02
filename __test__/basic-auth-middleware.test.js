@@ -1,61 +1,80 @@
-// 'use strict';
-// require('dotenv').config();
+"use strict";
 
-// process.env.SECRET = "toes";
+const supertest = require("supertest");
+const { server } = require("../src/server.js");
+const request = supertest(server);
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { Sequelize, DataTypes } = require("sequelize");
 
-// let superTest = require('supertest');
-// let server = require('../src/server');
-// let mockReq = superTest(server.server);
+const sequelize = new Sequelize(
+  "postgres://pfwvsseb:nsW3ouLEURu7OyQ_rDA7sJ8s13aeOTt7@tai.db.elephantsql.com/pfwvsseb",
+  {}
+);
 
-// const users = {
-//     admin: { username: 'admin-500', password: 'password', role: 'admin' },
-//     editor: { username: 'editor-500', password: 'password', role: 'editor' },
-//     user: { username: 'user-500', password: 'password', role: 'user' },
-// };
+const { Users } = require("../src/models/index");
 
-// // beforeAll(async (done) => {
-// //   await db.sync();
-// //   done();
-// // });
-// // afterAll(async (done) => {
-// //   await db.drop();
-// //   done();
-// // });
+describe("express server", () => {
+  it("should response with 404 on a bad route", async () => {
+    // arrange
+    let param = "/notfound";
+    let status = 404;
+    // act
+    const response = await request.get(param);
+    // assert
+    expect(response.status).toBe(status);
+  });
+  it("should response with 404 on a bad method", async () => {
+    // arrange
+    let param = "/";
+    let status = 404;
+    // act
+    const response = await request.post(param);
+    // assert
+    expect(response.status).toBe(status);
+  });
+  it("should check 500 errors", async () => {
+    // arrange
+    let param = "/bad";
+    let status = 404;
+    // act
+    const response = await request.get(param);
+    // assert
+    expect(response.status).toBe(status);
+  });
 
-// describe('sign-up sign-in', () => {
-//     Object.keys(users).forEach(user => {
-//         it('sign up', async () => {
-//             let res = await mockReq.post('/signup').send(users[user]);
-//             expect(res.status).toEqual(201);
-//             expect(res.body.token).toBeDefined();
-//             expect(res.body.user.id).toBeDefined();
-//             expect(res.body.user.username).toEqual(users[user].username);
-//         });
+  it("should POST to /signin to login as a user (use basic auth)", async () => {
+    // arrange
+    let param = "/signin";
+    let status = 403;
+    // act
+    const response = await request.post(param).auth("gg", "gg");
 
-//         it('sign in', async () => {
-//             let res = await mockReq.post('/signin').auth(users[user].username, users[user].password);
-//             expect(res.status).toEqual(200);
-//             expect(res.body.token).toBeDefined();
-//             expect(res.body.user.id).toBeDefined();
-//             expect(res.body.user.username).toEqual(users[user].username);
-//         });
-//     });
-// });
+    // assert
+    expect(response.status).toBe(status);
+  });
 
-// describe('/users + /secret', () => {
-//     it('/secret', async () => {
-//         let res = await mockReq.post('/signin').auth(users.user.username, users.user.password);
-//         const token_1 = res.body.token;
-//         let res2 = await mockReq.get('/secret').set(`Authorization`, `Bearer ${token_1}`);
-//         expect(res2.status).toEqual(200);
-//         expect(res2.text).toEqual('Welcome to the secret area');
-//     });
+  it("should POST to /signin rise error if user or password wrong", async () => {
+    // arrange
+    let param = "/signin";
+    let status = 403;
+    // act
+    const response = await request.post(param).auth("gg", "dd");
 
-//     it('/users', async () => {
-//         let res1 = await mockReq.post('/signin').auth(users.admin.username, users.admin.password);
-//         const token_2 = res1.body.token;
-//         let res = await mockReq.get('/users').set({ Authorization: `Bearer ${token_2}` });
-//         expect(res.status).toEqual(200);
-     
-//     });
-// });
+    // assert
+    expect(response.status).toBe(status);
+  });
+
+  it("should POST to /signup rise an error if user exsit", async () => {
+    // arrange
+    let param = "/signup";
+    let status = 500;
+    // act
+    const response = await request
+      .post(param)
+      .send({ username: "mahmoud", password: "123", role: "admin" });
+    // assert
+    expect(response.status).toBe(status);
+  });
+
+});

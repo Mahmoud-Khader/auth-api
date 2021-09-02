@@ -1,101 +1,92 @@
-// 'use strict';
-// process.env.SECRET = "toes";
-// let superTest = require('supertest');
-// const server = require('../src/server');
-// const mockReq = superTest(server.server);
+"use strict";
 
+const supertest = require("supertest");
+const { server } = require("../src/server.js");
+const request = supertest(server);
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { Sequelize, DataTypes } = require("sequelize");
 
-// let users = {
-//   admin: { username: 'admin', password: 'password', role: 'admin' },
-//   editor: { username: 'editor', password: 'password', role: 'editor' },
-//   writer: { username: 'writer', password: 'password', role: 'writer' },  
-//   user: { username: 'user', password: 'password', role: 'user' },
-// };
+describe("express server", () => {
+  it("should GET to /api/v1/food response with 200 OK if not authorized", async () => {
+    // arrange
+    let param = "/api/v1/food";
+    let status = 200;
+    // act
+    const response = await request.get(param);
 
-// // beforeAll(async (done) => {
-// //     await db.sync();
-// //     done();
-// //   });
-// //   afterAll(async (done) => {
-// //     await db.drop();
-// //     done();
-// //   });
+    // assert
+    expect(response.status).toBe(status);
+  });
 
+  it("should POST to /api/v1/food response with 201 if not authorized", async () => {
+    // arrange
+    let param = "/api/v1/food";
+    let status = 201;
+    // user token
 
-// describe('V1 Routes', () => {
+    // act
+    const response = await request
+      .post(param)
 
-//   it('can post a new food item', async() => {
-//     let obj = { name: 'test_food_1', calories: 9999, type: 'FRUIT' };
-//     let expected = { name: 'test_food_1', calories: 9999, type: 'FRUIT' };
+      .send({ name: "Orange" });
+    // assert
+    expect(response.status).toBe(status);
+  });
 
-//     const response = await mockReq.post('/api/v1/food').send(obj);
-//     const foodObject = response.body;
+  it("should PUT to /api/v1/food response with 201 if not authorized", async () => {
+    // arrange
+    let param = "/api/v1/food/5";
+    let status = 200;
+    // user token
 
-//     expect(response.status).toBe(201);
-//     expect(foodObject.id).toBeDefined();
-//     expect(foodObject.name).toEqual(expected.name)
-//     Object.keys(expected).forEach(item => {
-//           expect(foodObject[item]).toEqual(expected[item])
-//     });
-//   });
+    // act
+    const response = await request
+      .put(param)
 
-//   it('can get a food item', async() => {
-//     let obj = { name: 'test_food_2', calories: 9999, type: 'VEGETABLE' };
-//     let expected = { name: 'test_food_2', calories: 9999, type: 'VEGETABLE' };
+      .send({ name: "Orange" });
+    // assert
+    expect(response.status).toBe(status);
+  });
 
-//     const response = await mockReq.post('/api/v1/food').send(obj);
-//     const foodObject = response.body;
-//     const res = await mockReq.get(`/api/v1/food/${foodObject.id}`);
-//     expect(res.status).toBe(200);
-//     expect(res.body.id).toEqual(foodObject.id);
-//     Object.keys(expected).forEach(item => {
-//           expect(res.body[item]).toEqual(expected[item])
-//     });
-//   });
+  // cloooooooothes
 
-//   it('can get all food items', async() => {
-//     let obj = { name: 'test_food_3', calories: 9999, type: 'VEGETABLE' };
-//     let obj2 = { name: 'test_food_4', calories: 9999, type: 'PROTIEN' };
+  it("should GET to /api/v1/clothes response with 200 OK if not authorized", async () => {
+    // arrange
+    let param = "/api/v1/clothes";
+    let status = 200;
+    // act
+    const response = await request.get(param);
 
-//     await mockReq.post('/api/v1/food').send(obj);
-//     await mockReq.post('/api/v1/food').send(obj2);
-//     const res = await mockReq.get(`/api/v1/food/`);
-//     expect(res.status).toBe(200);
-//     Object.keys(obj).forEach(item => {
-//           expect(res.body[2][item]).toEqual(obj[item])
-//     });
-//     expect(res.body[0].name).toEqual('test_food_1');
-//     expect(res.body[1].name).toEqual('test_food_2');
-//     expect(res.body[2].name).toEqual('test_food_3');
-//     expect(res.body[3].name).toEqual('test_food_4');
-   
-//   });
+    // assert
+    expect(response.status).toBe(status);
+  });
 
-//   it('can update() a food item', async() => {
-//     let obj = { name: 'test_food_5', calories: 9999, type: 'PROTIEN' };
-//     let updatedObj = { name: 'test_food_5', calories: 9999, type: 'VEGETABLE' };
-//     let expected = { name: 'test_food_5', calories: 9999, type: 'VEGETABLE' };
+  it("should POST to /api/v1/clothes response with 201 if not authorized", async () => {
+    // arrange
+    let param = "/api/v1/clothes";
+    let status = 201;
+    // user token
 
-//     const response1 = await mockReq.post('/api/v1/food').send(obj);
-//     const response = await mockReq.put(`/api/v1/food/${response1.body.id}`).send(updatedObj);
-    
-//     expect(response.status).toBe(200);
-    
-//     Object.keys(expected).forEach(item => {
-//       expect(response.body[item]).toEqual(expected[item])
-//     });
-    
-//   });
+    // act
+    const response = await request
+      .post(param)
+      .send({ name: "Shirt", price: 20, color: "red" });
+    // assert
+    expect(response.status).toBe(status);
+  });
 
-//   it('can delete() a food item', async() => {
-//     let obj = { name: 'test_food_6', calories: 9999, type: 'VEGETABLE' };
-//     let expected = { name: 'test_food_6', calories: 9999, type: 'VEGETABLE' };
-//     const response1 = await mockReq.post('/api/v1/food').send(obj);
-//     const response2 = await mockReq.delete(`/api/v1/food/${response1.body.id}`);
-//     expect(response2.status).toBe(200);
-//     // Object.keys(expected).forEach(item => {
-//     //   expect(response2.body[item]).toEqual(expected[item])
-//     // });
-//   });
-        
-// });
+  it("should PUT to /api/v1/clothes response with 200 if not authorized", async () => {
+    // arrange
+    let param = "/api/v1/clothes/3";
+    let status = 200;
+    // user token
+
+    // act
+    const response = await request
+      .put(param)
+      .send({ name: "Shirt", price: 20, color: "red" });
+    // assert
+    expect(response.status).toBe(status);
+  });
+});
